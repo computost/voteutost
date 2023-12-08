@@ -1,8 +1,44 @@
 import express from "express";
+import passport from "passport";
+import { Strategy as LocalStrategy } from "passport-local";
+import { pbkdf2, timingSafeEqual } from "crypto";
+import { promisify } from "util";
+import createDataSource from "./createDataSource";
+import { User } from "./entities/User";
+const pbkdf2Async = promisify(pbkdf2);
 
-const start = () => {
+const start = async (dataSourceUrl: string) => {
+  const dataSource = createDataSource(dataSourceUrl);
+  await dataSource.initialize();
+
+  passport.use(
+    new LocalStrategy(async (username, password, cb) => {
+      const user = await dataSource.manager.findOneBy(User, { name: username });
+      // TODO null check user
+      const hashedPassword = await pbkdf2Async(
+        password,
+        user!.salt,
+        310000,
+        32,
+        "sha256"
+      );
+      if (timingSafeEqual(user!.password, hashedPassword)) {
+        cb(null, user!);
+      } else {
+        cb(null, false);
+        // TODO {
+        //  message: "Incorrect username or password.",
+        //}
+      }
+    })
+  );
+
   const app = express();
+
+  app.use(passport.authenticate("basic", { session: false, failWithError: true }));
+
   app.get("/whoami", (_, response) => response.status(401).send());
+
   return app;
 };
 export default start;
