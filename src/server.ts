@@ -1,6 +1,6 @@
 import express from "express";
 import passport from "passport";
-import { Strategy as LocalStrategy } from "passport-local";
+import { BasicStrategy } from "passport-http";
 import { pbkdf2, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import createDataSource from "./createDataSource";
@@ -12,7 +12,7 @@ const start = async (dataSourceUrl: string) => {
   await dataSource.initialize();
 
   passport.use(
-    new LocalStrategy(async (username, password, cb) => {
+    new BasicStrategy(async (username, password, cb) => {
       const user = await dataSource.manager.findOneBy(User, { name: username });
       // TODO null check user
       const hashedPassword = await pbkdf2Async(
@@ -35,9 +35,11 @@ const start = async (dataSourceUrl: string) => {
 
   const app = express();
 
-  app.use(passport.authenticate("basic", { session: false, failWithError: true }));
+  app.use(
+    passport.authenticate("basic", { session: false, failWithError: true })
+  );
 
-  app.get("/whoami", (_, response) => response.status(401).send());
+  app.get("/whoami", (_, response) => response.status(200).send());
 
   return app;
 };
