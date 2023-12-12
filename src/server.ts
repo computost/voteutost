@@ -5,6 +5,8 @@ import { pbkdf2, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import createDataSource from "./createDataSource";
 import { User } from "./entities/User";
+import "./types";
+
 const pbkdf2Async = promisify(pbkdf2);
 
 const start = async (dataSourceUrl: string) => {
@@ -39,7 +41,9 @@ const start = async (dataSourceUrl: string) => {
     passport.authenticate("basic", { session: false, failWithError: true })
   );
 
-  app.get("/whoami", (_, response) => response.status(200).send());
+  app.get("/whoami", (request, response) =>
+    response.status(200).send(request.user?.name)
+  );
 
   return app;
 };

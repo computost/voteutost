@@ -31,13 +31,13 @@ describe("GET /whoami", () => {
 
   test("unauthorized", async () => {
     whenRequestingWhoAmI();
-    await thenTheResponseHasStatus(401);
+    await thenTheResponseIsUnauthorized();
   });
 
   test("authorized", async () => {
     await givenAnAuthenticatedSession("user@example.com", "password");
     whenRequestingWhoAmI("user@example.com", "password");
-    await thenTheResponseHasStatus(200);
+    await thenTheResponseIsUser("user@example.com");
   });
 
   async function givenAnAuthenticatedSession(
@@ -66,7 +66,11 @@ describe("GET /whoami", () => {
     }
   }
 
-  async function thenTheResponseHasStatus(status: number) {
-    await response.expect(status);
+  async function thenTheResponseIsUnauthorized() {
+    await response.expect(401);
+  }
+
+  async function thenTheResponseIsUser(username: string) {
+    await response.expect(200, username);
   }
 });
