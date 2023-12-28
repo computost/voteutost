@@ -53,10 +53,21 @@ export function whenRequestingWhoAmI(username?: string, password?: string) {
   }
 }
 
+export function whenRegistering(username: string, password: string) {
+  response = request(app)
+    .post("/register")
+    .send({ username, password })
+    .set("Content-Type", "application/json");
+}
+
 export async function thenTheResponseIsUnauthorized() {
   await response.expect(401);
 }
 
 export async function thenTheResponseIsUser(username: string) {
   await response.expect(200, username);
+}
+
+export async function thenTheResponseIsCreated() {
+  await response.expect(201);
 }

@@ -1,6 +1,7 @@
-import express from "express";
+import express, { Request } from "express";
 import passport from "passport";
 import { BasicStrategy } from "passport-http";
+import { Strategy as AnonymousStrategy } from "passport-anonymous";
 import { pbkdf2, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import createDataSource from "./createDataSource";
@@ -36,6 +37,10 @@ const start = async (dataSourceUrl: string) => {
   );
 
   const app = express();
+
+  app.post("/register", passport.authenticate(new AnonymousStrategy()), (request: Request<object,never,{username: string, password: string}>, response) => {
+    response.status(201).send();
+  });
 
   app.use(
     passport.authenticate("basic", { session: false, failWithError: true })
