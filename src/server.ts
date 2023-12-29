@@ -38,9 +38,16 @@ const start = async (dataSourceUrl: string) => {
 
   const app = express();
 
-  app.post("/register", passport.authenticate(new AnonymousStrategy()), (request: Request<object,never,{username: string, password: string}>, response) => {
-    response.status(201).send();
-  });
+  app.post(
+    "/register",
+    passport.authenticate(new AnonymousStrategy()),
+    (
+      request: Request<object, never, { username: string; password: string }>,
+      response
+    ) => {
+      response.status(201).send();
+    }
+  );
 
   app.use(
     passport.authenticate("basic", { session: false, failWithError: true })

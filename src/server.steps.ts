@@ -1,9 +1,9 @@
 import "reflect-metadata";
 import { type Express } from "express";
-import { randomBytes, pbkdf2 } from "crypto";
+import { randomBytes, pbkdf2, timingSafeEqual } from "crypto";
 import { default as request, Test } from "supertest";
 import { promisify } from "util";
-import { beforeEach } from "vitest";
+import { beforeEach, expect } from "vitest";
 import { User } from "./entities/User";
 import {
   PostgreSqlContainer,
@@ -70,4 +70,27 @@ export async function thenTheResponseIsUser(username: string) {
 
 export async function thenTheResponseIsCreated() {
   await response.expect(201);
+}
+
+expect.extend({
+  toTimingSafeEqual(received: Parameters<typeof timingSafeEqual>[0], expected: Parameters<typeof timingSafeEqual>[1]) {
+    return {
+      pass: timingSafeEqual(received, expected),
+      message: () => `${received} is${this.isNot ? " not" : ""} ${expected}`,
+    };
+  },
+});
+
+export async function thenTheUserExists(username: string, password: string) {
+  const user = await dataSource.manager.findOneBy(User, { name: username });
+  expect(user).toBeTruthy();
+  const hashedPassword = await pbkdf2Async(
+    password,
+    user!.salt,
+    310000,
+    32,
+    "sha256"
+  );
+  expect(hashedPassword).toTimingSafeEqual(password);
+  //timingSafeEqual(user!.password, hashedPassword)
 }
