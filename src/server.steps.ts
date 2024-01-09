@@ -76,6 +76,8 @@ expect.extend({
   toTimingSafeEqual(received: Parameters<typeof timingSafeEqual>[0], expected: Parameters<typeof timingSafeEqual>[1]) {
     return {
       pass: timingSafeEqual(received, expected),
+      actual: received,
+      expected,
       message: () => `${received} is${this.isNot ? " not" : ""} ${expected}`,
     };
   },
@@ -83,7 +85,7 @@ expect.extend({
 
 export async function thenTheUserExists(username: string, password: string) {
   const user = await dataSource.manager.findOneBy(User, { name: username });
-  expect(user).toBeTruthy();
+  expect(user).not.toBeNull();
   const hashedPassword = await pbkdf2Async(
     password,
     user!.salt,
@@ -91,6 +93,5 @@ export async function thenTheUserExists(username: string, password: string) {
     32,
     "sha256"
   );
-  expect(hashedPassword).toTimingSafeEqual(password);
-  //timingSafeEqual(user!.password, hashedPassword)
+  expect(hashedPassword).toTimingSafeEqual(user!.password);
 }

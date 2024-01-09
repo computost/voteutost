@@ -2,10 +2,11 @@ import express, { Request } from "express";
 import passport from "passport";
 import { BasicStrategy } from "passport-http";
 import { Strategy as AnonymousStrategy } from "passport-anonymous";
-import { pbkdf2, timingSafeEqual } from "crypto";
+import { pbkdf2, timingSafeEqual, randomBytes } from "crypto";
 import { promisify } from "util";
 import createDataSource from "./createDataSource";
 import { User } from "./entities/User";
+import { json as jsonBodyParser } from "body-parser";
 import "./types";
 
 const pbkdf2Async = promisify(pbkdf2);
@@ -37,14 +38,29 @@ const start = async (dataSourceUrl: string) => {
   );
 
   const app = express();
-
+  app.use(jsonBodyParser());
   app.post(
     "/register",
     passport.authenticate(new AnonymousStrategy()),
-    (
+    async (
       request: Request<object, never, { username: string; password: string }>,
       response
     ) => {
+      // TODO validate body schema
+      const salt = randomBytes(16);
+      const hashedPassword = await pbkdf2Async(
+        request.body.password,
+        salt,
+        310000,
+        32,
+        "sha256"
+      );
+      await dataSource.manager.insert(User, {
+        name: request.body.username,
+        password: hashedPassword,
+        salt,
+      });
+
       response.status(201).send();
     }
   );
