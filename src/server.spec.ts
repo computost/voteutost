@@ -10,9 +10,16 @@ import {
 } from "./server.steps";
 
 describe("GET /whoami", () => {
-  test("unauthorized", async () => {
-    whenRequestingWhoAmI();
-    await thenTheResponseIsUnauthorized();
+  describe("unauthorized", () => {
+    test("no credentials", async () => {
+      whenRequestingWhoAmI();
+      await thenTheResponseIsUnauthorized();
+    });
+
+    test("non-existent user", async () => {
+      whenRequestingWhoAmI("sasquatch@example.com", "password");
+      await thenTheResponseIsUnauthorized();
+    });
   });
 
   test("authorized", async () => {
@@ -27,5 +34,5 @@ describe("POST /register", () => {
     whenRegistering("user@example.com", "password");
     await thenTheResponseIsCreated();
     await thenTheUserExists("user@example.com", "password");
-  })
+  });
 });

@@ -18,16 +18,21 @@ const start = async (dataSourceUrl: string) => {
   passport.use(
     new BasicStrategy(async (username, password, cb) => {
       const user = await dataSource.manager.findOneBy(User, { name: username });
-      // TODO null check user
+
+      if (!user) {
+        cb(null, false);
+        return;
+      }
+
       const hashedPassword = await pbkdf2Async(
         password,
-        user!.salt,
+        user.salt,
         310000,
         32,
         "sha256"
       );
-      if (timingSafeEqual(user!.password, hashedPassword)) {
-        cb(null, user!);
+      if (timingSafeEqual(user.password, hashedPassword)) {
+        cb(null, user);
       } else {
         cb(null, false);
         // TODO {
