@@ -35,4 +35,7 @@ describe("POST /register", () => {
     await thenTheResponseIsCreated();
     await thenTheUserExists("user@example.com", "password");
   });
+
+  // TODO: Pick up here
+  test("invalid credentials", async () => {});
 });
